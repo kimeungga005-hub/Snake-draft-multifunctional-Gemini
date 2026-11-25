@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS SNAKE DRAFT — 이스포츠 & RPG 팀 드래프트 매니저</title>
+  <style>
+    :root {
+      --bg-dark: #0b0e14;
+      --bg-panel: #131822;
+      --bg-card: #1a2130;
+      --bg-card-hover: #222b3e;
+      --border: #2a3449;
+      --text-main: #eef2f9;
+      --text-sub: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+
+      /* Tier Colors */
+      --tier-X: #9b59b6;
+      --tier-S: #e74c3c;
+      --tier-A: #f1c40f;
+      --tier-B: #2ecc71;
+      --tier-C: #3498db;
+      --tier-D: #95a5a6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Header */
+    header {
+      background: linear-gradient(180deg, #161d2b 0%, #0f141e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+    }
+    .logo span.badge {
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: #475569;
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #0284c7);
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.12);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #10b981);
+      border-color: #34d399;
+      color: #fff;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+    /* Container */
+    .container {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Setup Grid */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .preset-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: left;
+    }
+    .preset-card:hover, .preset-card.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .preset-card h4 { font-size: 0.95rem; margin-bottom: 4px; color: var(--accent); }
+    .preset-card p { font-size: 0.8rem; color: var(--text-sub); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.82rem; color: var(--text-sub); font-weight: 600; }
+    .form-control {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* Position Tags Editor */
+    .pos-editor {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .pos-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+    }
+    .pos-chip input {
+      background: transparent;
+      border: none;
+      width: 75px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .pos-chip input:focus { outline: none; border-bottom: 1px solid var(--accent); }
+    .pos-chip button {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Roster Preview Cards in Setup */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    /* Square Avatar */
+    .avatar-sq {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #0f172a;
+      display: block;
+    }
+
+    /* Tier Styles */
+    .tier-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+    .tier-X { background: var(--tier-X); }
+    .tier-S { background: var(--tier-S); }
+    .tier-A { background: var(--tier-A); color: #111; text-shadow: none; }
+    .tier-B { background: var(--tier-B); color: #052e16; text-shadow: none; }
+    .tier-C { background: var(--tier-C); }
+    .tier-D { background: var(--tier-D); color: #111; text-shadow: none; }
+
+    .border-tier-X { border: 2px solid var(--tier-X) !important; box-shadow: 0 0 12px rgba(155, 89, 182, 0.25); }
+    .border-tier-S { border: 2px solid var(--tier-S) !important; box-shadow: 0 0 12px rgba(231, 76, 60, 0.25); }
+    .border-tier-A { border: 2px solid var(--tier-A) !important; }
+    .border-tier-B { border: 2px solid var(--tier-B) !important; }
+    .border-tier-C { border: 2px solid var(--tier-C) !important; }
+    .border-tier-D { border: 2px solid var(--tier-D) !important; }
+
+    /* Draft Status Banner */
+    .draft-banner {
+      background: linear-gradient(135deg, #172033 0%, #1e1b4b 100%);
+      border: 1px solid #4338ca;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .turn-indicator {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .turn-avatar {
+      width: 56px;
+      height: 56px;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid var(--accent);
+    }
+    .pick-queue {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .queue-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border);
+    }
+    .queue-pill.now {
+      background: var(--accent);
+      color: #090d16;
+      font-weight: 800;
+      border-color: #fff;
+    }
+
+    /* Teams Horizontal Board */
+    .teams-board-wrapper {
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .teams-board {
+      display: flex;
+      gap: 14px;
+      min-width: max-content;
+    }
+    .teams-board.grid-mode {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      min-width: 100%;
+    }
+    .team-col {
+      width: 235px;
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+    .teams-board.grid-mode .team-col { width: 100%; }
+    .team-col.active-turn {
+      border-color: var(--accent);
+      box-shadow: 0 0 22px var(--accent-glow);
+      transform: translateY(-3px);
+    }
+    .captain-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .captain-box img {
+      width: 54px;
+      height: 54px;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid #f59e0b;
+    }
+    .team-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .slot-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+    }
+    .slot-card.empty {
+      border-style: dashed;
+      opacity: 0.55;
+      cursor: default;
+      height: 60px;
+      justify-content: center;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+    }
+    .slot-card img {
+      width: 46px;
+      height: 46px;
+      aspect-ratio: 1 / 1;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    /* Tier Rows in Player Pool */
+    .tier-row {
+      margin-bottom: 18px;
+      background: rgba(15, 20, 30, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .tier-row-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .tier-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+      gap: 12px;
+    }
+    .player-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 10px;
+      position: relative;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .player-card:hover:not(.picked) {
+      transform: translateY(-3px);
+      background: var(--bg-card-hover);
+    }
+    .player-card.picked {
+      opacity: 0.35;
+      filter: grayscale(85%);
+      pointer-events: none;
+    }
+    .player-card .picked-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .card-top-badges {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+    .pos-tag {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    .attr-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    .attr-pill {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    .card-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+    .card-actions button {
+      flex: 1;
+      padding: 6px 4px;
+      font-size: 0.76rem;
+    }
+    .rec-badge {
+      position: absolute;
+      top: -7px;
+      right: 8px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-size: 0.66rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.82);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 880px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .attr-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .attr-btn {
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--bg-dark);
+      cursor: pointer;
+    }
+    .attr-btn.selected {
+      background: var(--accent);
+      color: #090d16;
+      border-color: #fff;
+    }
+
+    /* Stats Box */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      background: var(--bg-dark);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-total-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #172033;
+      margin-top: 10px;
+      font-weight: 700;
+    }
+    .stat-total-bar.over-limit {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+    }
+    .rank-tag {
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    /* Evaluation Report */
+    .eval-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+    }
+    .eval-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .star-score {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fbbf24;
+    }
+    .eval-section {
+      background: rgba(11, 14, 20, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.84rem;
+    }
+    .eval-section h5 {
+      color: var(--accent);
+      margin-bottom: 5px;
+      font-size: 0.86rem;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .container { padding: 12px; }
+      header { padding: 12px 14px; }
+      .tier-cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>⚡ NEXUS SNAKE DRAFT</span>
+    <span class="badge">Standalone Edition</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="exportJSON()">📤 JSON 내보내기</button>
+    <label class="btn btn-sm" style="cursor:pointer;">
+      📥 JSON 불러오기
+      <input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="importJSON(event)" />
+    </label>
+    <button class="btn btn-sm btn-danger" onclick="resetToDefaultSample()">🔄 샘플 데이터 초기화</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ==================== 1. SETUP VIEW ==================== -->
+  <section id="setupView">
+    <div class="panel">
+      <div class="panel-title">
+        <span>⚙️ 1. 드래프트 모드 & 인원 커스텀 설정</span>
+        <button class="btn btn-primary" onclick="startDraft()">🚀 스네이크 드래프트 시작하기</button>
+      </div>
+
+      <p style="font-size:0.84rem; color:var(--text-sub); margin-bottom:12px;">
+        원클릭 프리셋을 선택하거나 팀 수, 팀당 선발 인원, 총 참가자 수 및 포지션 체계를 자유롭게 커스텀하세요.
+      </p>
+
+      <div class="preset-grid">
+        <div class="preset-card active" id="preset-default" onclick="applyPreset('default')">
+          <h4>1. [기본] 6팀 드래프트</h4>
+          <p>감독 6명 / 참가자 36명 / 5포지션 (팀당 6명 선발)</p>
+        </div>
+        <div class="preset-card" id="preset-5man" onclick="applyPreset('5man')">
+          <h4>2. [5인] 5팀 드래프트</h4>
+          <p>감독 5명 / 참가자 25명 / 5포지션 (팀당 5명 선발)</p>
+        </div>
+        <div class="preset-card" id="preset-7pos" onclick="applyPreset('7pos')">
+          <h4>3. [7포지션] 4팀 RPG 드래프트</h4>
+          <p>감독 4명 / 참가자 28명 / 7포지션 (포지션당 4명, 팀당 7명)</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>감독(팀) 수</label>
+          <input type="number" id="cfgTeamCount" class="form-control" min="2" max="12" value="6" onchange="syncConfigFromInputs()" />
+        </div>
+        <div class="form-group">
+          <label>팀당 선발 팀원 수 (라운드 수)</label>
+          <input type="number" id="cfgTeamSize" class="form-control" min="1" max="15" value="6" onchange="syncConfigFromInputs()" />
+        </div>
+        <div class="form-group">
+          <label>총 참가자 풀 인원</label>
+          <input type="number" id="cfgTotalPlayers" class="form-control" min="2" max="120" value="36" onchange="syncConfigFromInputs()" />
+        </div>
+        <div class="form-group">
+          <label>포지션 체계 모드</label>
+          <select id="cfgPosMode" class="form-control" onchange="switchPositionMode(this.value)">
+            <option value="lane">라인 모드 (탑, 정글, 미드, 원딜, 서폿)</option>
+            <option value="rpg">RPG 직업 모드 7종 (탱커~힐러)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>포지션 목록 (이름 직접 수정 / 추가 / 삭제 가능)</label>
+        <div class="pos-editor" id="posEditor"></div>
+      </div>
+    </div>
+
+    <!-- Captains & Players Management -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>👑 2. 감독(팀장) 명단 (<span id="captainCountLabel">6</span>명)</span>
+        <button class="btn btn-sm btn-primary" onclick="openCharacterModal('captain', null)">+ 새 감독 추가</button>
+      </div>
+      <div class="mini-grid" id="setupCaptainsGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span>⚔️ 3. 참가자 대기 명단 (<span id="playerCountLabel">36</span>명)</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="openCustomStatModal()">🧬 8번째 스탯 커스텀 관리</button>
+          <button class="btn btn-sm btn-primary" onclick="openCharacterModal('player', null)">+ 새 참가자 추가</button>
+        </div>
+      </div>
+      <div id="setupPlayersTierContainer"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 2. DRAFT VIEW ==================== -->
+  <section id="draftView" class="hidden">
+    <div class="draft-banner">
+      <div class="turn-indicator" id="turnIndicator"></div>
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">다음 스네이크 픽 순서 미리보기</div>
+        <div class="pick-queue" id="pickQueuePreview"></div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="toggleBoardLayout()">📱 팀 보드 보기 전환 (가로/그리드)</button>
+        <button class="btn btn-sm" id="undoPickBtn" onclick="undoLastPick()">↩️ 직전 픽 되돌리기</button>
+        <button class="btn btn-sm btn-danger" onclick="abortDraftToSetup()">🏠 처음으로 돌아가기</button>
+      </div>
+    </div>
+
+    <!-- Real-time Teams Horizontal Board -->
+    <div class="teams-board-wrapper">
+      <div class="teams-board" id="teamsBoard"></div>
+    </div>
+
+    <!-- Filter & Pool -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>📋 참가자 드래프트 풀 (티어별 정렬)</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <select id="filterPos" class="form-control" style="padding:5px 10px; font-size:0.82rem;" onchange="renderDraftPool()">
+            <option value="ALL">전체 포지션</option>
+          </select>
+          <select id="filterTier" class="form-control" style="padding:5px 10px; font-size:0.82rem;" onchange="renderDraftPool()">
+            <option value="ALL">전체 티어</option>
+            <option value="X">X 티어</option>
+            <option value="S">S 티어</option>
+            <option value="A">A 티어</option>
+            <option value="B">B 티어</option>
+            <option value="C">C 티어</option>
+            <option value="D">D 티어</option>
+          </select>
+          <input type="text" id="filterSearch" class="form-control" placeholder="이름/종족/속성 검색..." style="padding:5px 10px; font-size:0.82rem; width:170px;" oninput="renderDraftPool()" />
+        </div>
+      </div>
+      <div id="draftPoolContainer"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 3. RESULT & EVALUATION VIEW ==================== -->
+  <section id="resultView" class="hidden">
+    <div class="panel">
+      <div class="panel-title">
+        <span>🏆 스네이크 드래프트 최종 결과 및 AI 팀 조합 분석 리포트</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="restartSameDraft()">🔁 같은 설정으로 다시 드래프트</button>
+          <button class="btn btn-danger" onclick="abortDraftToSetup()">🏠 처음으로 돌아가기 / 설정 변경</button>
+        </div>
+      </div>
+      <p style="font-size:0.86rem; color:var(--text-sub); margin-bottom:16px;">
+        현재 선택된 포지션 체계(<strong id="resultModeBadge" style="color:var(--accent);"></strong>)와 내장된 20종 속성 상성표, 8대 스탯 및 전략·고유 스탯 시너지를 기반으로 산출된 팀별 종합 평가입니다.
+      </p>
+      <div class="eval-grid" id="evaluationContainer"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ==================== CHARACTER DETAIL / EDIT MODAL ==================== -->
+<div class="modal-backdrop" id="charModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="charModalTitle">캐릭터 상세 프로필 및 전투 스탯</h3>
+      <button class="btn btn-sm" onclick="closeModal('charModal')">✕ 닫기</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 150px 1fr; gap:18px; margin-bottom:16px;">
+      <div>
+        <img id="mAvatarPreview" class="avatar-sq" src="" alt="avatar" />
+        <label class="btn btn-sm" style="width:100%; justify-content:center; margin-top:8px; cursor:pointer;">
+          🖼️ 이미지 업로드
+          <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)" />
+        </label>
+      </div>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="form-group">
+          <label>이름</label>
+          <input type="text" id="mName" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>포지션 / 주 역할군</label>
+          <select id="mPosition" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label>티어 (X ~ D)</label>
+          <select id="mTier" class="form-control">
+            <option value="X">X 티어 (보라)</option>
+            <option value="S">S 티어 (빨강)</option>
+            <option value="A">A 티어 (노랑)</option>
+            <option value="B">B 티어 (초록)</option>
+            <option value="C">C 티어 (파랑)</option>
+            <option value="D">D 티어 (회색)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>종족 (직접 입력 또는 선택)</label>
+          <input type="text" id="mRace" list="raceSuggestions" class="form-control" placeholder="예: 펭귄, 혈귀, 드래곤, 인간, 여우, 청룡..." />
+          <datalist id="raceSuggestions">
+            <option value="인간"></option>
+            <option value="혈귀"></option>
+            <option value="드래곤"></option>
+            <option value="펭귄"></option>
+            <option value="여우"></option>
+            <option value="청룡"></option>
+            <option value="고대공룡"></option>
+            <option value="정령"></option>
+            <option value="기계인형"></option>
+          </datalist>
+        </div>
+      </div>
+    </div>
+
+    <!-- 20 Attributes (1~3) -->
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>속성 선택 (최소 1개 ~ 최대 3개 선택 / 클릭 순서대로 1·2·3순위 적용): <span id="selectedAttrOrder" style="color:var(--accent);"></span></label>
+      <div class="attr-selector" id="mAttrSelector"></div>
+    </div>
+
+    <!-- 8 Stats System -->
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>8대 스탯 시스템 (절대 상한선: 2333)</label>
+      <div class="stats-grid">
+        <div class="form-group"><label>HP</label><input type="number" id="sHP" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>공격</label><input type="number" id="sATK" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>방어</label><input type="number" id="sDEF" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>특공</label><input type="number" id="sSPA" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>특방</label><input type="number" id="sSPD" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>스피드</label><input type="number" id="sSPE" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group"><label>전략 (기믹파훼)</label><input type="number" id="sSTR" class="form-control" min="1" max="1000" oninput="updateStatTotalUI()" /></div>
+        <div class="form-group">
+          <label>8번째 핵심 스탯 (Max 100)</label>
+          <input type="number" id="s8Val" class="form-control" min="0" max="100" oninput="updateStatTotalUI()" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:10px; align-items:center;">
+        <select id="s8Type" class="form-control" onchange="updateEighthStatDesc()"></select>
+        <div id="s8DescBox" style="font-size:0.8rem; color:var(--text-sub); background:var(--bg-dark); padding:8px 12px; border-radius:8px; border:1px solid var(--border);"></div>
+      </div>
+
+      <div class="stat-total-bar" id="statTotalBar">
+        <div>최종 개체값 총합: <span id="statTotalNum" style="font-size:1.15rem;">0</span> / 2333</div>
+        <div id="statRankBadge"></div>
+      </div>
+      <div id="statWarningMsg" style="color:#fca5a5; font-size:0.82rem; margin-top:5px; font-weight:700;" class="hidden">
+        ⚠️ 경고: 최종 개체값 총합이 세계관 절대 상한선(2333)을 초과했습니다! 수치를 조정해 주세요.
+      </div>
+    </div>
+
+    <!-- Combat Gimmicks -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label>전투 역할군 (예: 특수 스위퍼, 물리 탱커, 만능형)</label>
+        <input type="text" id="mCombatRole" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>전용 기술</label>
+        <input type="text" id="mSignatureSkill" class="form-control" />
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>패시브 / 기본 특성</label>
+        <textarea id="mTrait" class="form-control" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>숨겨진 특성</label>
+        <textarea id="mHiddenTrait" class="form-control" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>각성 (발동 조건 · 효과 · 페널티)</label>
+      <textarea id="mAwakening" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteCurrentCharacter()">🗑️ 삭제</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="closeModal('charModal')">취소</button>
+        <button class="btn btn-primary" id="mSaveBtn" onclick="saveCharacterModal()">💾 저장하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CUSTOM 8TH STAT MODAL ==================== -->
+<div class="modal-backdrop" id="customStatModal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h3>🧬 8번째 핵심 스탯 커스텀 관리 (Max 100)</h3>
+      <button class="btn btn-sm" onclick="closeModal('customStatModal')">✕ 닫기</button>
+    </div>
+    <div id="eighthStatList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; max-height:260px; overflow-y:auto;"></div>
+    <div style="border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:0.92rem; margin-bottom:10px;">+ 새 8번째 고유 스탯 추가</h4>
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="form-group">
+          <label>스탯 명칭</label>
+          <input type="text" id="newStatName" class="form-control" placeholder="예: 공허 동조율" />
+        </div>
+        <div class="form-group">
+          <label>적용 대상 (종족 / 전체)</label>
+          <input type="text" id="newStatTarget" class="form-control" placeholder="예: 고대공룡 한정 / 전체" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>효과 및 패널티 설명</label>
+        <input type="text" id="newStatDesc" class="form-control" placeholder="수치 비례 특수 효과 및 디메리트를 입력하세요." />
+      </div>
+      <button class="btn btn-primary" onclick="addCustomEighthStat()">+ 커스텀 스탯 등록</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   1. CONSTANTS & 20-ELEMENT TYPE CHART
+   ============================================================================ */
+const ALL_ATTRIBUTES = [
+  '해', '달', '물', '얼음', '풀', '비행', '불', '바위', '땅', '드래곤',
+  '격투', '귀신', '강철', '독', '벌레', '전기', '악', '선', '정신', '보통'
+];
+
+const TIER_ORDER = ['X', 'S', 'A', 'B', 'C', 'D'];
+const TIER_SCORE = { X: 100, S: 85, A: 70, B: 55, C: 40, D: 25 };
+
+// 20종 속성 상성표: TYPE_CHART[공격속성][방어속성] = 배율 (2: 약점/2배, 0.5: 반감, 0: 무효, 생략시 1배)
+const TYPE_CHART = {
+  '해':   { '달': 2, '귀신': 2, '얼음': 2, '풀': 0.5, '바위': 0.5, '선': 0.5 },
+  '달':   { '정신': 2, '귀신': 2, '선': 2, '해': 0.5, '악': 0.5, '강철': 0.5 },
+  '물':   { '불': 2, '땅': 2, '바위': 2, '물': 0.5, '풀': 0.5, '드래곤': 0.5 },
+  '얼음': { '풀': 2, '땅': 2, '비행': 2, '드래곤': 2, '불': 0.5, '물': 0.5, '얼음': 0.5, '강철': 0.5 },
+  '풀':   { '물': 2, '땅': 2, '바위': 2, '불': 0.5, '풀': 0.5, '독': 0.5, '비행': 0.5, '벌레': 0.5, '드래곤': 0.5, '강철': 0.5 },
+  '비행': { '풀': 2, '격투': 2, '벌레': 2, '전기': 0.5, '바위': 0.5, '강철': 0.5 },
+  '불':   { '풀': 2, '얼음': 2, '벌레': 2, '강철': 2, '불': 0.5, '물': 0.5, '바위': 0.5, '드래곤': 0.5, '해': 0.5 },
+  '바위': { '불': 2, '얼음': 2, '비행': 2, '벌레': 2, '격투': 0.5, '땅': 0.5, '강철': 0.5 },
+  '땅':   { '불': 2, '전기': 2, '독': 2, '바위': 2, '강철': 2, '풀': 0.5, '벌레': 0.5, '비행': 0 },
+  '드래곤': { '드래곤': 2, '강철': 0.5, '선': 0 },
+  '격투': { '보통': 2, '얼음': 2, '바위': 2, '악': 2, '강철': 2, '독': 0.5, '비행': 0.5, '정신': 0.5, '벌레': 0.5, '선': 0.5, '귀신': 0 },
+  '귀신': { '정신': 2, '귀신': 2, '악': 0.5, '해': 0.5, '보통': 0 },
+  '강철': { '얼음': 2, '바위': 2, '선': 2, '불': 0.5, '물': 0.5, '전기': 0.5, '강철': 0.5 },
+  '독':   { '풀': 2, '선': 2, '독': 0.5, '땅': 0.5, '바위': 0.5, '귀신': 0.5, '강철': 0 },
+  '벌레': { '풀': 2, '정신': 2, '악': 2, '불': 0.5, '격투': 0.5, '독': 0.5, '비행': 0.5, '귀신': 0.5, '강철': 0.5, '선': 0.5 },
+  '전기': { '물': 2, '비행': 2, '풀': 0.5, '전기': 0.5, '드래곤': 0.5, '땅': 0 },
+  '악':   { '정신': 2, '귀신': 2, '선': 2, '격투': 0.5, '악': 0.5 },
+  '선':   { '악': 2, '귀신': 2, '드래곤': 2, '불': 0.5, '독': 0.5, '강철': 0.5, '달': 0.5 },
+  '정신': { '격투': 2, '독': 2, '정신': 0.5, '강철': 0.5, '악': 0 },
+  '보통': { '바위': 0.5, '강철': 0.5, '귀신': 0 }
+};
+
+const DEFAULT_EIGHTH_STATS = [
+  { id: 'learning', name: '습득', target: '인간 한정', desc: '경험치·기술 연마 속도 증가 및 숨겨진 잠재능력 개방 확률 증가 (Max 100).' },
+  { id: 'regen', name: '재생력', target: '혈귀 한정', desc: '상처 회복 및 신체 부위 복구 속도. 목을 베이지 않는 한 전투 지속력 향상 (Max 100).' },
+  { id: 'scales_dragon', name: '피부 경도', target: '드래곤 한정', desc: '일반 방어와 별개로 최종 물리 피해 감소 및 일격 경직 시간 감소 (Max 100).' },
+  { id: 'cold_adapt', name: '추위 적응력', target: '펭귄 한정', desc: "얼음 속성 위력 증가, '눈' 필드 시 매 턴 HP 회복. 단, 비행 속성 기술 사용 시 수치에 비례해 스피드 하락 디메리트 (Max 100)." },
+  { id: 'fox_wit', name: '명석한 두뇌', target: '여우 한정', desc: '소모성 장치(랜덤박스) 긍정 효과 확률 상승 및 적 디버프·함정 기믹 무효화/역이용 확률 증가 (Max 100).' },
+  { id: 'azure_scales', name: '청룡의 비늘', target: '청룡/하프 한정', desc: '일반 특방과 별개로 최종 특수·마법 피해 감소, 일격 경직 감소 및 상태이상 확률 감소 (Max 100).' }
+];
+
+const POS_PRESETS = {
+  lane: ['탑', '정글', '미드', '원딜', '서폿'],
+  rpg: ['탱커', '전사', '마법사', '암살자', '원거리딜러', '서포터', '힐러']
+};
+
+/* ============================================================================
+   2. SVG AVATAR GENERATOR (CLEAN SQUARE FALLBACK)
+   ============================================================================ */
+function makeSvgAvatar(name, bg1, bg2, symbol) {
+  const initials = (name || '?').slice(0, 2);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${bg1}"/>
+        <stop offset="100%" stop-color="${bg2}"/>
+      </linearGradient>
+    </defs>
+    <rect width="240" height="240" fill="url(#g)"/>
+    <circle cx="120" cy="92" r="44" fill="rgba(255,255,255,0.16)"/>
+    <text x="120" y="106" font-family="sans-serif" font-size="34" font-weight="800" fill="#ffffff" text-anchor="middle">${symbol || initials}</text>
+    <rect x="20" y="164" width="200" height="44" rx="10" fill="rgba(10,14,22,0.68)"/>
+    <text x="120" y="192" font-family="sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">${name}</text>
+  </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+/* ============================================================================
+   3. ORIGINAL FICTIONAL SAMPLE DATA (6 CAPTAINS + 36 PLAYERS)
+   ============================================================================ */
+function createInitialData() {
+  const captains = [
+    {
+      id: 'cap_1', name: '아르카디아', position: '미드', tier: 'S', race: '청룡',
+      attrs: ['드래곤', '전기', '선'],
+      stats: { hp: 210, atk: 140, def: 150, spa: 260, spd: 210, spe: 220, str: 240, s8Type: 'azure_scales', s8Val: 92 },
+      combatRole: '전술 지휘형 특수 딜러', signatureSkill: '창공의 뇌명진',
+      trait: '청룡의 위엄: 아군 전체 특수 방어 및 명중률 상승', hiddenTrait: '천후 지배: 비/번개 필드 시 스킬 쿨타임 감소',
+      awakening: 'HP 40% 이하 시 [진·창룡현현] 발동 — 특공·스피드 급상승, 종료 후 1턴 경직',
+      avatar: makeSvgAvatar('아르카디아', '#0284c7', '#1e1b4b', '🐉')
+    },
+    {
+      id: 'cap_2', name: '블러드베인', position: '정글', tier: 'S', race: '혈귀',
+      attrs: ['악', '귀신', '달'],
+      stats: { hp: 240, atk: 250, def: 160, spa: 150, spd: 145, spe: 235, str: 195, s8Type: 'regen', s8Val: 95 },
+      combatRole: '초재생 암살 브루저', signatureSkill: '혈월의 참격',
+      trait: '피의 갈증: 처치 관여 시 잃은 체력 25% 즉시 회복', hiddenTrait: '불사의 육신: 치명타 피해 30% 경감',
+      awakening: '밤/달 필드에서 [혈귀왕 각성] — 재생력 극대화, 해 속성 피격 시 2.5배 데미지 페널티',
+      avatar: makeSvgAvatar('블러드베인', '#991b1b', '#18181b', '🩸')
+    },
+    {
+      id: 'cap_3', name: '프로스트펭', position: '서폿', tier: 'A', race: '펭귄',
+      attrs: ['얼음', '물'],
+      stats: { hp: 185, atk: 85, def: 140, spa: 165, spd: 175, spe: 140, str: 255, s8Type: 'cold_adapt', s8Val: 94 },
+      combatRole: '필드 제어 전략가', signatureSkill: '절대영도 빙하결계',
+      trait: '만년설의 가호: 전투 시작 시 전장을 눈 필드로 전환', hiddenTrait: '빙판 슬라이드: 눈 필드에서 회피율 대폭 증가',
+      awakening: '아군 위기 시 [극지방의 함성] — 아군 보호막 부여, 비행 기술 사용 불가 페널티',
+      avatar: makeSvgAvatar('프로스트펭', '#0369a1', '#0f172a', '🐧')
+    },
+    {
+      id: 'cap_4', name: '이그니스', position: '탑', tier: 'S', race: '드래곤',
+      attrs: ['불', '바위', '드래곤'],
+      stats: { hp: 270, atk: 245, def: 240, spa: 170, spd: 160, spe: 120, str: 165, s8Type: 'scales_dragon', s8Val: 90 },
+      combatRole: '불굴의 화염 탱커', signatureSkill: '용암폭렬 브레스',
+      trait: '화산갑옷: 근접 공격한 적에게 화상 부여', hiddenTrait: '용의 역린: 체력이 낮을수록 공격력 상승',
+      awakening: '체력 30% 미만 시 [고대 화룡 각성] — 물리 방어 2배, 스피드 30% 감소 페널티',
+      avatar: makeSvgAvatar('이그니스', '#c2410c', '#27272a', '🔥')
+    },
+    {
+      id: 'cap_5', name: '백설묘', position: '원딜', tier: 'A', race: '여우',
+      attrs: ['정신', '선', '풀'],
+      stats: { hp: 150, atk: 120, def: 110, spa: 235, spd: 170, spe: 225, str: 260, s8Type: 'fox_wit', s8Val: 96 },
+      combatRole: '트릭스터 원거리 누커', signatureSkill: '구미호의 환혹탄',
+      trait: '여우구슬: 3턴마다 랜덤 버프 구슬 생성', hiddenTrait: '기믹 간파: 적의 함정 및 디버프를 반사',
+      awakening: '전략 판정 성공 시 [천년여우 개화] — 모든 기술 확정 치명타, 방어력 25% 감소',
+      avatar: makeSvgAvatar('백설묘', '#7e22ce', '#1e1b4b', '🦊')
+    },
+    {
+      id: 'cap_6', name: '카이저린', position: '탑', tier: 'S', race: '인간',
+      attrs: ['강철', '격투', '해'],
+      stats: { hp: 215, atk: 230, def: 205, spa: 130, spd: 165, spe: 185, str: 230, s8Type: 'learning', s8Val: 95 },
+      combatRole: '성장형 성기사 만능형', signatureSkill: '여명의 성검 파동',
+      trait: '전장의 지휘자: 매 턴 모든 능력치 소폭 상승', hiddenTrait: '불굴의 의지: 상태이상 지속시간 50% 단축',
+      awakening: '아군 2인 이상 전투불능 시 [성광 해방] — 공·방 극대화, 매 턴 HP 10% 소모',
+      avatar: makeSvgAvatar('카이저린', '#b45309', '#1e293b', '⚔️')
+    }
+  ];
+
+  const rawPlayers = [
+    // X Tier (3)
+    ['제노스', '미드', 'X', '드래곤', ['드래곤', '귀신', '달'], [290, 220, 210, 340, 240, 270, 260, 'scales_dragon', 98], '초월적 차원 마도사', '차원 붕괴멸살포', '허공의 비늘: 단일기 피해 40% 경감', '종말의 예언: 5턴째 광역 고정 피해', 'HP 25% 이하 시 [신격 강림] — 총합 2100대 해방, 이후 영구 봉인 페널티', '#581c87', '#090d16'],
+    ['루미나리아', '원딜', 'X', '청룡', ['해', '선', '비행'], [260, 290, 190, 310, 230, 310, 250, 'azure_scales', 97], '천공의 성광 사수', '태양창섬 유성우', '신성한 비늘: 디버프 완전 면역', '천상의 시야: 적 회피율 무시', '해 필드에서 [태양룡 각성] — 모든 공격 광역화, 밤 필드에서 스탯 20% 하락', '#7c3aed', '#1e1b4b'],
+    ['아카츠키', '정글', 'X', '혈귀', ['악', '불', '귀신'], [280, 330, 200, 240, 190, 320, 220, 'regen', 99], '상현의 혈염 귀검사', '혈귀술·홍련지옥', '무한 재생: 턴 종료 시 최대 체력 20% 회복', '살의 파동: 저체력 적 처형 판정', '치명상 피격 시 [혈귀화 폭주] — 공격력 1.8배, 아군 버프 수신 불가', '#6d28d9', '#18181b'],
+
+    // S Tier (6)
+    ['발키리온', '탑', 'S', '인간', ['강철', '선', '전기'], [195, 205, 190, 140, 165, 175, 200, 'learning', 90], '전뇌 성기사 탱커', '발할라 전자방벽', '전투 학습: 피격당한 속성의 내성 획득', '초전도 갑주: 전기/강철 위력 30% 증가', 'HP 35% 이하 시 [오버드라이브] — 방어·특방 급상승, 스피드 절반 감소', '#b91c1c', '#1f2937'],
+    ['크로노렉스', '탑', 'S', '고대공룡', ['바위', '땅', '드래곤'], [240, 235, 220, 110, 150, 135, 140, 'scales_dragon', 88], '태고의 폭군 탱커', '대지분쇄 쥬라기 팡', '고대 장갑: 물리 치명타 면역', '지각 변동: 등장 시 바위/땅 필드 전개', '체력 절반 이하 시 [원시 회귀] — 공격력 폭증, 특방 30% 하락', '#991b1b', '#292524'],
+    ['세라핀', '서폿', 'S', '여우', ['정신', '달', '선'], [165, 95, 130, 210, 195, 205, 245, 'fox_wit', 93], '환몽의 신탁 무녀', '월광 결계·소원성취', '여우의 축복: 아군 랜덤박스 대성공률 2배', '정신 감응: 적의 다음 행동 예측', '아군 전멸 위기 시 [구미호 신탁] — 1회 전체 부활, 자신은 전투 이탈', '#dc2626', '#1e1b4b'],
+    ['카이론', '미드', 'S', '인간', ['정신', '불', '해'], [160, 115, 125, 235, 175, 200, 230, 'learning', 89], '아스트랄 대현자', '항성 폭발 노바', '천재의 통찰: 적의 숨겨진 특성 무효화', '마력 순환: 기술 연속 사용 시 위력 증가', '마력 100% 충전 시 [현자의 돌 해방] — 특공 1.6배, 다음 턴 행동 불가', '#be123c', '#172554'],
+    ['볼트론', '원딜', 'S', '기계인형', ['전기', '강철'], [170, 225, 165, 215, 155, 230, 175, 'scales_dragon', 82], '초고속 레일건 저격수', '전자기 레일캐논', '정밀 조준: 턴이 지날수록 치명타율 상승', '절연 코팅: 마비 및 감전 면역', '3턴 경과 시 [시즈 모드 각성] — 사거리·화력 극대화, 이동/회피 불가', '#b91c1c', '#0f172a'],
+    ['미라주', '정글', 'S', '귀신', ['귀신', '독', '악'], [165, 220, 130, 210, 145, 245, 210, 'fox_wit', 86], '심연의 그림자 암살자', '사신강림·독무참', '그림자 은신: 첫 턴 타겟 지정 불가', '맹독 부여: 모든 공격에 중독 확률 부여', '적 고립 시 [암흑 동화] — 관통력 100%, 해 속성 공격에 극도로 취약', '#991b1b', '#090d16'],
+
+    // A Tier (9)
+    ['글레이시아', '미드', 'A', '펭귄', ['얼음', '정신'], [115, 65, 90, 145, 120, 110, 135, 'cold_adapt', 85], '빙설의 룬 마법사', '블리자드 아케인', '한기 응축: 눈 필드에서 특공 25% 상승', '냉철한 사고: 혼란·매혹 면역', '눈 필드 지속 3턴 시 [만년빙 각성] — 광역 빙결 확률 증가, 비행기 봉인', '#ca8a04', '#1e293b'],
+    ['타이런트', '탑', 'A', '고대공룡', ['땅', '격투'], [145, 140, 130, 60, 90, 95, 85, 'scales_dragon', 78], '돌격형 트리케라 전사', '대지돌파 혼 스트라이크', '육중한 돌진: 방어 태세 적에게 추가 피해', '초식 거인: 풀 속성 회복 효과 2배', '피격 누적 시 [광폭 돌진] — 공격·스피드 상승, 명중률 소폭 하락', '#a16207', '#27272a'],
+    ['실피드', '서폿', 'A', '정령', ['비행', '풀', '선'], [105, 70, 95, 120, 135, 145, 130, 'azure_scales', 75], '바람과 숲의 치유사', '생명의 산들바람', '순풍 가호: 아군 전체 스피드 버프', '광합성: 해 필드에서 매 턴 HP 회복', '아군 체력 30% 이하 시 [세계수의 숨결] — 대규모 힐, 2턴 쿨타임', '#b45309', '#064e3b'],
+    ['루나틱', '정글', 'A', '혈귀', ['달', '격투'], [120, 135, 95, 85, 90, 140, 105, 'regen', 80], '월하의 쌍검 혈귀', '월영 난무', '피의 선율: 연속 공격 시 흡혈량 증가', '야행성: 달 필드에서 스피드 30% 증가', '달 필드에서 [월광 폭주] — 연타수 증가, 방어력 하락', '#ca8a04', '#1f2937'],
+    ['아이기스', '서폿', 'A', '인간', ['강철', '바위'], [140, 80, 155, 70, 140, 75, 125, 'learning', 77], '철벽의 수호기사', '이지스 절대방어', '수호자의 맹세: 인접 아군 피해 30% 대신 받음', '전술 방패: 원거리 투사체 반사', '아군 보호 성공 시 [불굴의 요새] — 방어력 급상승, 행동 속도 저하', '#a16207', '#1e293b'],
+    ['스파크', '원딜', 'A', '여우', ['전기', '불'], [95, 115, 80, 135, 95, 145, 120, 'fox_wit', 81], '도깨비불 전격 사수', '여우불 플라즈마', '정전기 트랩: 공격한 적의 스피드 감소', '영리한 회피: 20% 확률로 공격 회피', '연속 치명타 시 [구미 전격모드] — 공격 속도 극대화, 내구도 감소', '#b45309', '#31102f'],
+    ['드레이크', '정글', 'A', '청룡', ['물', '드래곤'], [125, 125, 110, 120, 110, 125, 115, 'azure_scales', 80], '창해의 유격수', '수룡승천파', '물살 가르기: 물 필드에서 선제공격권 획득', '청룡의 가호: 상태이상 저항 증가', 'HP 50% 이하 시 [해일 각성] — 물리·특수 양면 화력 상승', '#ca8a04', '#0c4a6e'],
+    ['베놈퀸', '미드', 'A', '벌레', ['독', '벌레', '악'], [105, 85, 95, 140, 120, 125, 130, 'fox_wit', 76], '맹독 여왕벌 지휘관', '치명적 페로몬 독침', '독소 확산: 중독된 적에게 추가 피해', '군집 본능: 아군 벌레/독 속성 시너지', '적 3인 이상 중독 시 [여왕의 군림] — 광역 디버프 폭증', '#a16207', '#1a2e05'],
+    ['솔라리스', '원딜', 'A', '인간', ['해', '불'], [100, 130, 85, 130, 90, 130, 115, 'learning', 79], '태양궁의 명사수', '헬리오스 관통화살', '태양 충전: 해 필드에서 스킬 쿨타임 감소', '관통 사격: 적 방어막 무시', '해 필드에서 [태양신 강림] — 화력 1.4배, 비/눈 필드에서 약화', '#b45309', '#451a03'],
+
+    // B Tier (9)
+    ['페블린', '탑', 'B', '바위', ['바위', '땅'], [125, 105, 125, 45, 85, 55, 70, 'scales_dragon', 65], '화강암 골렘 수비수', '록 블래스트 실드', '단단한 껍질: 일격사 방지(HP 1 생존)', '지진 저항: 땅 속성 피해 반감', 'HP 20% 시 [철벽 응고] — 방어 극대화, 스피드 최저', '#15803d', '#1c1917'],
+    ['페퍼민트', '서폿', 'B', '펭귄', ['얼음', '풀'], [95, 55, 80, 95, 105, 95, 115, 'cold_adapt', 72], '약초학자 펭귄 의무병', '빙하 허브 티타임', '냉장 보관: 회복 아이템 효과 30% 증가', '아로마 테라피: 아군 상태이상 1개 해제', '눈 필드에서 [치유의 눈보라] — 매 턴 아군 소량 힐, 비행기 사용 불가', '#166534', '#064e3b'],
+    ['쉐도우팡', '정글', 'B', '여우', ['악', '보통'], [90, 115, 75, 85, 80, 130, 110, 'fox_wit', 74], '은빛 여우 정찰병', '기습 그림자 물기', '야습 전문가: 첫 공격 위력 1.3배', '함정 해체: 필드 함정 제거', '기습 성공 시 [연속 추격] — 추가 행동 1회, 재사용 대기 3턴', '#15803d', '#1e293b'],
+    ['플로라', '미드', 'B', '정령', ['풀', '선'], [90, 60, 80, 120, 110, 100, 105, 'learning', 66], '꽃잎의 정령술사', '만개하는 꽃보라', '꽃가루 치유: 스킬 사용 시 자신 소량 회복', '자연 친화: 풀 필드에서 명중률 상승', '해 필드에서 [대자연 개화] — 범위 확장, 불 속성에 매우 취약', '#166534', '#14532d'],
+    ['아이언클로', '탑', 'B', '인간', ['격투', '강철'], [110, 120, 105, 50, 80, 95, 90, 'learning', 70], '강철의 건틀릿 격투가', '메탈 너클 러시', '투지: 근접전 시 공격력 소폭 상승', '가드 브레이크: 방어 중인 적 파쇄', 'HP 40% 이하 시 [무투가 투혼] — 치명타율 상승', '#15803d', '#27272a'],
+    ['아쿠아린', '원딜', 'B', '청룡', ['물', '비행'], [95, 105, 80, 110, 95, 115, 95, 'azure_scales', 68], '물보라 하프 드래곤', '워터 애로우 연사', '유영: 물 필드에서 회피율 증가', '청룡의 혈통: 마법 피해 10% 경감', '비 필드에서 [폭풍 사격] — 연사력 상승', '#166534', '#0c4a6e'],
+    ['더스크', '미드', 'B', '귀신', ['귀신', '정신'], [85, 65, 75, 125, 105, 105, 110, 'fox_wit', 67], '황혼의 강령술사', '원혼의 저주구', '영혼 흡수: 적 처치 시 마력 회복', '부유: 땅 속성 공격 무효', '밤/달 필드에서 [망령 소환] — 특공 상승', '#15803d', '#1e1b4b'],
+    ['스틸윙', '정글', 'B', '고대공룡', ['비행', '강철'], [105, 115, 100, 65, 80, 120, 80, 'scales_dragon', 69], '익룡 강철 기습병', '스틸 다이브 폭격', '급강하: 비행 기술 선제 판정', '강철 깃털: 바위 약점 상쇄', '고공 비행 후 [음속 돌파] — 1턴 후 강력한 일격', '#166534', '#1f2937'],
+    ['루비노', '원딜', 'B', '혈귀', ['불', '악'], [95, 115, 75, 110, 80, 115, 90, 'regen', 71], '화염탄 혈귀 사수', '블러드 파이어볼', '흡혈 사격: 입힌 피해의 15% 회복', '불꽃 혈액: 화상 면역', '야간 전투 시 [진홍빛 사격] — 공격·특공 상승', '#15803d', '#450a0a'],
+
+    // C Tier (6)
+    ['포포리', '서폿', 'C', '펭귄', ['물', '보통'], [85, 50, 70, 75, 85, 80, 95, 'cold_adapt', 60], '견습 보급관 펭귄', '시원한 물대포 응원', '보급품 전달: 아군 1인 마력 회복', '뒤뚱뒤뚱: 넘어지며 적 시선 분산', '눈 필드에서 [미끄럼 돌격] — 아군 보호막 소량 부여', '#1d4ed8', '#0f172a'],
+    ['코볼트', '정글', 'C', '인간', ['땅', '보통'], [80, 95, 75, 55, 65, 100, 85, 'learning', 62], '광산 탐사 정찰대원', '곡괭이 기습 타격', '빠른 성장: 경험치 획득량 20% 증가', '지형 숙지: 함정 회피율 상승', '위기 시 [연막탄 투척] — 안전하게 후퇴 가능', '#1e40af', '#292524'],
+    ['버그나이트', '탑', 'C', '벌레', ['벌레', '풀'], [95, 90, 95, 55, 75, 75, 70, 'scales_dragon', 55], '딱정벌레 견습 기사', '헤라클레스 뿔치기', '단단한 외골격: 물리 방어 소폭 증가', '숲의 위장: 풀 필드에서 은신', '체력 저하 시 [탈피] — 상태이상 해제 및 스피드 상승', '#1d4ed8', '#14532d'],
+    ['미스틱', '미드', 'C', '정령', ['정신', '보통'], [75, 50, 65, 105, 90, 85, 90, 'fox_wit', 58], '초보 별점술사', '스타더스트 미사일', '예지몽: 전투 시작 시 적 1명 속성 파악', '정신 집중: 명중률 상승', '달 필드에서 [별빛 증폭] — 특공 소폭 상승', '#1e40af', '#1e1b4b'],
+    ['클레이', '원딜', 'C', '인간', ['바위', '비행'], [80, 95, 70, 70, 70, 95, 80, 'learning', 61], '새총 명사수 견습생', '유성 돌팔매', '연속 투척: 2~3회 연속 타격', '기류 타기: 바람 필드에서 사거리 증가', '집중 사격 시 [급소 명중] — 방어 일부 관통', '#1d4ed8', '#1f2937'],
+    ['그린캡', '서폿', 'C', '정령', ['독', '풀'], [80, 55, 70, 85, 85, 80, 90, 'fox_wit', 57], '버섯 포자 조제사', '수면 포자 살포', '포자 방출: 피격 시 적에게 확률적 수면/독', '숲의 안식: 풀 속성 아군 회복량 보조', '전투 후반 [포자 폭발] — 광역 상태이상 시도', '#1e40af', '#064e3b'],
+
+    // D Tier (3)
+    ['슬라임킹', '탑', 'D', '정령', ['물', '독'], [95, 60, 65, 60, 65, 45, 55, 'regen', 45], '말랑한 점액 방패', '점액질 몸통박치기', '물리 흡수: 타격 피해 15% 경감', '분열: 체력 50% 시 소형 슬라임 소환', '위기 시 [거대화] — HP 일시 증가, 화염에 극약', '#475569', '#0f172a'],
+    ['삐약이', '원딜', 'D', '펭귄', ['보통', '비행'], [65, 75, 55, 65, 60, 85, 65, 'cold_adapt', 40], '날고 싶은 아기 펭귄', '파닥파닥 돌진', '응원 유발: 아군 사기 소폭 상승', '작은 체구: 피격 판정 축소', '필사적 각성 [파닥임 폭발] — 1회 돌진 후 스피드 대폭 하락', '#334155', '#1e293b'],
+    ['허수아비', '서폿', 'D', '기계인형', ['보통', '풀'], [90, 45, 75, 45, 75, 40, 70, 'learning', 35], '훈련장 목각 인형', '어그로 도발 춤', '단단한 목재: 1턴간 적 시선 집중', '수리 용이: 회복 스킬 효율 증가', '파괴 직전 [자폭 스파크] — 적 전체 명중률 하락', '#475569', '#1c1917']
+  ];
+
+  const players = rawPlayers.map((p, idx) => ({
+    id: 'plr_' + (idx + 1),
+    name: p[0],
+    position: p[1],
+    tier: p[2],
+    race: p[3],
+    attrs: p[4],
+    stats: {
+      hp: p[5][0], atk: p[5][1], def: p[5][2], spa: p[5][3],
+      spd: p[5][4], spe: p[5][5], str: p[5][6], s8Type: p[5][7], s8Val: p[5][8]
+    },
+    combatRole: p[6],
+    signatureSkill: p[7],
+    trait: p[8],
+    hiddenTrait: p[9],
+    awakening: p[10],
+    avatar: makeSvgAvatar(p[0], p[11], p[12], p[2])
+  }));
+
+  return {
+    config: {
+      teamCount: 6,
+      teamSize: 6,
+      totalPlayers: 36,
+      posMode: 'lane',
+      positions: [...POS_PRESETS.lane]
+    },
+    eighthStats: JSON.parse(JSON.stringify(DEFAULT_EIGHTH_STATS)),
+    captains,
+    players
+  };
+}
+
+/* ============================================================================
+   4. GLOBAL APPLICATION STATE
+   ============================================================================ */
+const STORAGE_KEY = 'nexus_snake_draft_v1';
+let appData = loadFromStorage() || createInitialData();
+
+let draftState = {
+  active: false,
+  pickOrder: [],     // array of team indices (0 ~ teamCount-1)
+  currentStep: 0,
+  teams: [],         // [{ captain, members: [] }]
+  pickedIds: new Set(),
+  gridLayout: false
+};
+
+let modalContext = {
+  type: 'player', // 'captain' | 'player'
+  id: null,       // null if new
+  selectedAttrs: [],
+  avatarDataUrl: ''
+};
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+  } catch (e) {
+    console.warn('LocalStorage 저장 한도 초과 가능성:', e);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function resetToDefaultSample() {
+  if (!confirm('모든 커스텀 수정 내역을 초기화하고 기본 오리지널 샘플 데이터로 되돌릴까요?')) return;
+  appData = createInitialData();
+  saveToStorage();
+  abortDraftToSetup();
+  renderSetupView();
+}
+
+/* ============================================================================
+   5. SETUP VIEW & PRESETS
+   ============================================================================ */
+function applyPreset(presetKey) {
+  document.querySelectorAll('.preset-card').forEach(el => el.classList.remove('active'));
+  const card = document.getElementById('preset-' + presetKey);
+  if (card) card.classList.add('active');
+
+  if (presetKey === 'default') {
+    appData.config.teamCount = 6;
+    appData.config.teamSize = 6;
+    appData.config.totalPlayers = 36;
+    appData.config.posMode = 'lane';
+    appData.config.positions = [...POS_PRESETS.lane];
+  } else if (presetKey === '5man') {
+    appData.config.teamCount = 5;
+    appData.config.teamSize = 5;
+    appData.config.totalPlayers = 25;
+    appData.config.posMode = 'lane';
+    appData.config.positions = [...POS_PRESETS.lane];
+  } else if (presetKey === '7pos') {
+    appData.config.teamCount = 4;
+    appData.config.teamSize = 7;
+    appData.config.totalPlayers = 28;
+    appData.config.posMode = 'rpg';
+    appData.config.positions = [...POS_PRESETS.rpg];
+  }
+
+  saveToStorage();
+  renderSetupView();
+}
+
+function syncConfigFromInputs() {
+  appData.config.teamCount = Math.max(2, parseInt(document.getElementById('cfgTeamCount').value) || 6);
+  appData.config.teamSize = Math.max(1, parseInt(document.getElementById('cfgTeamSize').value) || 6);
+  appData.config.totalPlayers = Math.max(2, parseInt(document.getElementById('cfgTotalPlayers').value) || 36);
+  saveToStorage();
+  renderSetupView();
+}
+
+function switchPositionMode(mode) {
+  appData.config.posMode = mode;
+  appData.config.positions = [...POS_PRESETS[mode]];
+  // 기존 캐릭터들의 포지션도 자연스럽게 매핑
+  const targetPos = appData.config.positions;
+  const mapToNew = (oldPos, idx) => {
+    if (targetPos.includes(oldPos)) return oldPos;
+    return targetPos[idx % targetPos.length];
+  };
+  appData.captains.forEach((c, i) => c.position = mapToNew(c.position, i));
+  appData.players.forEach((p, i) => p.position = mapToNew(p.position, i));
+  saveToStorage();
+  renderSetupView();
+}
+
+function renderPositionEditor() {
+  const container = document.getElementById('posEditor');
+  container.innerHTML = '';
+  appData.config.positions.forEach((pos, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'pos-chip';
+    chip.innerHTML = `
+      <input type="text" value="${pos}" onchange="renamePosition(${idx}, this.value)" />
+      ${appData.config.positions.length > 1 ? `<button title="삭제" onclick="removePosition(${idx})">✕</button>` : ''}
+    `;
+    container.appendChild(chip);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn btn-sm';
+  addBtn.textContent = '+ 포지션 추가';
+  addBtn.onclick = () => {
+    appData.config.positions.push('신규포지션' + (appData.config.positions.length + 1));
+    saveToStorage();
+    renderSetupView();
+  };
+  container.appendChild(addBtn);
+}
+
+function renamePosition(idx, newName) {
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  const oldName = appData.config.positions[idx];
+  appData.config.positions[idx] = trimmed;
+  appData.captains.forEach(c => { if (c.position === oldName) c.position = trimmed; });
+  appData.players.forEach(p => { if (p.position === oldName) p.position = trimmed; });
+  saveToStorage();
+  renderSetupView();
+}
+
+function removePosition(idx) {
+  if (appData.config.positions.length <= 1) return;
+  const removed = appData.config.positions.splice(idx, 1)[0];
+  const fallback = appData.config.positions[0];
+  appData.captains.forEach(c => { if (c.position === removed) c.position = fallback; });
+  appData.players.forEach(p => { if (p.position === removed) p.position = fallback; });
+  saveToStorage();
+  renderSetupView();
+}
+
+function getStatTotal(stats) {
+  return (Number(stats.hp)||0) + (Number(stats.atk)||0) + (Number(stats.def)||0) +
+         (Number(stats.spa)||0) + (Number(stats.spd)||0) + (Number(stats.spe)||0) +
+         (Number(stats.str)||0) + (Number(stats.s8Val)||0);
+}
+
+function getStatRankInfo(total) {
+  if (total > 2333) return { label: '⚠️ 상한선 초과 (>2333)', bg: '#ef4444', color: '#fff' };
+  if (total >= 1501) return { label: '🌌 초월·각성·합체 (1501~2333)', bg: '#9b59b6', color: '#fff' };
+  if (total >= 1000) return { label: '👑 보스급 (1000~1500)', bg: '#e74c3c', color: '#fff' };
+  if (total >= 751)  return { label: '🔥 준보스·에이스 (751~999)', bg: '#f59e0b', color: '#111' };
+  return { label: '🛡️ 일반 파티원 (~750)', bg: '#10b981', color: '#052e16' };
+}
+
+function renderSetupView() {
+  document.getElementById('cfgTeamCount').value = appData.config.teamCount;
+  document.getElementById('cfgTeamSize').value = appData.config.teamSize;
+  document.getElementById('cfgTotalPlayers').value = appData.config.totalPlayers;
+  document.getElementById('cfgPosMode').value = appData.config.posMode;
+
+  renderPositionEditor();
+
+  // Render Captains (active slice highlighted)
+  const capGrid = document.getElementById('setupCaptainsGrid');
+  capGrid.innerHTML = '';
+  document.getElementById('captainCountLabel').textContent = `${Math.min(appData.captains.length, appData.config.teamCount)} / ${appData.captains.length}`;
+
+  appData.captains.forEach((cap, idx) => {
+    const activeInDraft = idx < appData.config.teamCount;
+    const total = getStatTotal(cap.stats);
+    const card = document.createElement('div');
+    card.className = `player-card border-tier-${cap.tier}`;
+    if (!activeInDraft) card.style.opacity = '0.45';
+    card.innerHTML = `
+      <div class="card-top-badges">
+        <span class="tier-badge tier-${cap.tier}">${cap.tier}티어</span>
+        <span class="pos-tag">${cap.position}</span>
+      </div>
+      <img src="${cap.avatar}" class="avatar-sq" alt="${cap.name}" />
+      <div style="font-weight:700; font-size:0.9rem;">${cap.name} ${!activeInDraft ? '(대기)' : ''}</div>
+      <div style="font-size:0.75rem; color:var(--text-sub);">${cap.race} · 총합 ${total}</div>
+      <div class="attr-pills">${cap.attrs.map(a => `<span class="attr-pill">${a}</span>`).join('')}</div>
+      <div class="card-actions">
+        <button class="btn btn-sm" onclick="openCharacterModal('captain', '${cap.id}')">상세 / 수정</button>
+      </div>
+    `;
+    capGrid.appendChild(card);
+  });
+
+  // Render Players by Tier rows
+  const container = document.getElementById('setupPlayersTierContainer');
+  container.innerHTML = '';
+  const activePlayers = appData.players.slice(0, appData.config.totalPlayers);
+  document.getElementById('playerCountLabel').textContent = `${activePlayers.length} (전체 ${appData.players.length}명 중 상위 설정 인원 참여)`;
+
+  TIER_ORDER.forEach(tier => {
+    const list = appData.players.filter(p => p.tier === tier);
+    if (list.length === 0) return;
+
+    const row = document.createElement('div');
+    row.className = 'tier-row';
+    row.innerHTML = `
+      <div class="tier-row-header">
+        <span class="tier-badge tier-${tier}">${tier} 티어</span>
+        <span>(${list.length}명)</span>
+      </div>
+      <div class="tier-cards-grid" id="setup-tier-${tier}"></div>
+    `;
+    container.appendChild(row);
+
+    const grid = row.querySelector(`#setup-tier-${tier}`);
+    list.forEach(p => {
+      const globalIdx = appData.players.findIndex(x => x.id === p.id);
+      const isIncluded = globalIdx < appData.config.totalPlayers;
+      const total = getStatTotal(p.stats);
+      const card = document.createElement('div');
+      card.className = `player-card border-tier-${p.tier}`;
+      if (!isIncluded) card.style.opacity = '0.45';
+      card.innerHTML = `
+        <div class="card-top-badges">
+          <span class="tier-badge tier-${p.tier}">${p.tier}</span>
+          <span class="pos-tag">${p.position}</span>
+        </div>
+        <img src="${p.avatar}" class="avatar-sq" alt="${p.name}" />
+        <div style="font-weight:700; font-size:0.88rem;">${p.name} ${!isIncluded ? '(제외됨)' : ''}</div>
+        <div style="font-size:0.74rem; color:var(--text-sub);">${p.race} · 스탯 ${total}</div>
+        <div class="attr-pills">${p.attrs.map(a => `<span class="attr-pill">${a}</span>`).join('')}</div>
+        <div class="card-actions">
+          <button class="btn btn-sm" onclick="openCharacterModal('player', '${p.id}')">상세 / 수정</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+/* ============================================================================
+   6. SNAKE DRAFT LOGIC
+   ============================================================================ */
+function startDraft() {
+  const { teamCount, teamSize, totalPlayers } = appData.config;
+  if (appData.captains.length < teamCount) {
+    alert(`감독이 최소 ${teamCount}명 필요합니다. 현재 ${appData.captains.length}명입니다.`);
+    return;
+  }
+  const pool = appData.players.slice(0, totalPlayers);
+  if (pool.length < teamCount * teamSize) {
+    alert(`총 선발 인원(${teamCount * teamSize}명)보다 참가자 풀(${pool.length}명)이 적습니다. 설정을 조정해 주세요.`);
+    return;
+  }
+
+  // Build Snake Pick Order: Round 1 (0..N-1), Round 2 (N-1..0), ...
+  const pickOrder = [];
+  for (let r = 0; r < teamSize; r++) {
+    if (r % 2 === 0) {
+      for (let t = 0; t < teamCount; t++) pickOrder.push(t);
+    } else {
+      for (let t = teamCount - 1; t >= 0; t--) pickOrder.push(t);
+    }
+  }
+
+  const selectedCaptains = appData.captains.slice(0, teamCount);
+  draftState = {
+    active: true,
+    pickOrder,
+    currentStep: 0,
+    teams: selectedCaptains.map(cap => ({ captain: cap, members: [] })),
+    pickedIds: new Set(),
+    gridLayout: false
+  };
+
+  // Populate position filter in Draft View
+  const filterPos = document.getElementById('filterPos');
+  filterPos.innerHTML = '<option value="ALL">전체 포지션</option>' +
+    appData.config.positions.map(pos => `<option value="${pos}">${pos}</option>`).join('');
+
+  document.getElementById('setupView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('draftView').classList.remove('hidden');
+
+  renderDraftView();
+}
+
+function restartSameDraft() {
+  startDraft();
+}
+
+function abortDraftToSetup() {
+  draftState.active = false;
+  document.getElementById('draftView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('setupView').classList.remove('hidden');
+  renderSetupView();
+}
+
+function toggleBoardLayout() {
+  draftState.gridLayout = !draftState.gridLayout;
+  const board = document.getElementById('teamsBoard');
+  board.classList.toggle('grid-mode', draftState.gridLayout);
+}
+
+function pickPlayer(playerId) {
+  if (!draftState.active || draftState.currentStep >= draftState.pickOrder.length) return;
+  if (draftState.pickedIds.has(playerId)) return;
+
+  const player = appData.players.find(p => p.id === playerId);
+  if (!player) return;
+
+  const teamIdx = draftState.pickOrder[draftState.currentStep];
+  draftState.teams[teamIdx].members.push(player);
+  draftState.pickedIds.add(playerId);
+  draftState.currentStep++;
+
+  if (draftState.currentStep >= draftState.pickOrder.length) {
+    finishDraft();
+  } else {
+    renderDraftView();
+  }
+}
+
+function undoLastPick() {
+  if (draftState.currentStep <= 0) return;
+  draftState.currentStep--;
+  const teamIdx = draftState.pickOrder[draftState.currentStep];
+  const removed = draftState.teams[teamIdx].members.pop();
+  if (removed) draftState.pickedIds.delete(removed.id);
+  renderDraftView();
+}
+
+function renderDraftView() {
+  const currentTeamIdx = draftState.pickOrder[draftState.currentStep];
+  const currentTeam = draftState.teams[currentTeamIdx];
+  const roundNum = Math.floor(draftState.currentStep / appData.config.teamCount) + 1;
+  const pickInRound = (draftState.currentStep % appData.config.teamCount) + 1;
+
+  // Turn Indicator
+  document.getElementById('turnIndicator').innerHTML = `
+    <img src="${currentTeam.captain.avatar}" class="turn-avatar" alt="turn" />
+    <div>
+      <div style="font-size:0.78rem; color:var(--accent); font-weight:700;">
+        ROUND ${roundNum} · PICK ${pickInRound} (전체 ${draftState.currentStep + 1} / ${draftState.pickOrder.length}픽)
+      </div>
+      <div style="font-size:1.15rem; font-weight:800;">
+        현재 차례: <span style="color:#fbbf24;">${currentTeam.captain.name}</span> 감독팀
+      </div>
+    </div>
+  `;
+
+  // Next 8 Picks Preview
+  const queueEl = document.getElementById('pickQueuePreview');
+  queueEl.innerHTML = '';
+  const upcoming = draftState.pickOrder.slice(draftState.currentStep, draftState.currentStep + 8);
+  upcoming.forEach((tIdx, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'queue-pill' + (idx === 0 ? ' now' : '');
+    pill.textContent = `${idx === 0 ? '▶ ' : ''}${draftState.teams[tIdx].captain.name}`;
+    queueEl.appendChild(pill);
+  });
+
+  document.getElementById('undoPickBtn').disabled = draftState.currentStep === 0;
+
+  // Teams Horizontal Board
+  const board = document.getElementById('teamsBoard');
+  board.innerHTML = '';
+  draftState.teams.forEach((team, tIdx) => {
+    const isTurn = tIdx === currentTeamIdx;
+    const col = document.createElement('div');
+    col.className = 'team-col' + (isTurn ? ' active-turn' : '');
+
+    let slotsHtml = '';
+    for (let s = 0; s < appData.config.teamSize; s++) {
+      const m = team.members[s];
+      if (m) {
+        slotsHtml += `
+          <div class="slot-card border-tier-${m.tier}" onclick="openCharacterModal('player', '${m.id}', true)">
+            <img src="${m.avatar}" alt="${m.name}" />
+            <div style="overflow:hidden;">
+              <div style="font-weight:700; font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
+              <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
+                <span class="tier-badge tier-${m.tier}">${m.tier}</span>
+                <span class="pos-tag">${m.position}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        slotsHtml += `<div class="slot-card empty">${s + 1}픽 대기 슬롯</div>`;
+      }
+    }
+
+    col.innerHTML = `
+      <div class="captain-box" onclick="openCharacterModal('captain', '${team.captain.id}', true)">
+        <img src="${team.captain.avatar}" alt="${team.captain.name}" />
+        <div>
+          <div style="font-size:0.72rem; color:#fbbf24; font-weight:700;">👑 감독 (${team.captain.position})</div>
+          <div style="font-weight:800; font-size:0.96rem;">${team.captain.name}</div>
+          <div style="font-size:0.72rem; color:var(--text-sub);">${team.members.length} / ${appData.config.teamSize}명 선발</div>
+        </div>
+      </div>
+      <div class="team-slots">${slotsHtml}</div>
+    `;
+    board.appendChild(col);
+  });
+
+  renderDraftPool();
+}
+
+function renderDraftPool() {
+  const currentTeamIdx = draftState.pickOrder[draftState.currentStep];
+  const currentTeam = draftState.teams[currentTeamIdx];
+
+  // Missing positions in current team for smart recommendation badge
+  const filledPositions = new Set([currentTeam.captain.position, ...currentTeam.members.map(m => m.position)]);
+  const missingPositions = new Set(appData.config.positions.filter(pos => !filledPositions.has(pos)));
+
+  const posFilter = document.getElementById('filterPos').value;
+  const tierFilter = document.getElementById('filterTier').value;
+  const searchQuery = document.getElementById('filterSearch').value.trim().toLowerCase();
+
+  const pool = appData.players.slice(0, appData.config.totalPlayers);
+  const container = document.getElementById('draftPoolContainer');
+  container.innerHTML = '';
+
+  TIER_ORDER.forEach(tier => {
+    if (tierFilter !== 'ALL' && tierFilter !== tier) return;
+
+    const list = pool.filter(p => {
+      if (p.tier !== tier) return false;
+      if (posFilter !== 'ALL' && p.position !== posFilter) return false;
+      if (searchQuery) {
+        const hay = `${p.name} ${p.race} ${p.position} ${p.attrs.join(' ')}`.toLowerCase();
+        if (!hay.includes(searchQuery)) return false;
+      }
+      return true;
+    });
+
+    if (list.length === 0) return;
+
+    const row = document.createElement('div');
+    row.className = 'tier-row';
+    row.innerHTML = `
+      <div class="tier-row-header">
+        <span class="tier-badge tier-${tier}">${tier} 티어</span>
+        <span>남은 인원: ${list.filter(p => !draftState.pickedIds.has(p.id)).length} / ${list.length}명</span>
+      </div>
+      <div class="tier-cards-grid"></div>
+    `;
+    container.appendChild(row);
+
+    const grid = row.querySelector('.tier-cards-grid');
+    list.forEach(p => {
+      const isPicked = draftState.pickedIds.has(p.id);
+      const isRecommended = !isPicked && missingPositions.has(p.position);
+      const total = getStatTotal(p.stats);
+
+      const card = document.createElement('div');
+      card.className = `player-card border-tier-${p.tier}` + (isPicked ? ' picked' : '');
+      card.innerHTML = `
+        ${isRecommended ? `<span class="rec-badge">✨ 공백 포지션 추천</span>` : ''}
+        <div class="card-top-badges">
+          <span class="tier-badge tier-${p.tier}">${p.tier}</span>
+          <span class="pos-tag">${p.position}</span>
+        </div>
+        <img src="${p.avatar}" class="avatar-sq" alt="${p.name}" />
+        <div style="font-weight:700; font-size:0.9rem;">${p.name}</div>
+        <div style="font-size:0.74rem; color:var(--text-sub);">${p.race} · 총합 ${total}</div>
+        <div class="attr-pills">${p.attrs.map(a => `<span class="attr-pill">${a}</span>`).join('')}</div>
+        <div class="card-actions">
+          <button class="btn btn-sm" onclick="openCharacterModal('player', '${p.id}', true)">정보</button>
+          <button class="btn btn-sm btn-primary" onclick="pickPlayer('${p.id}')">지명</button>
+        </div>
+        ${isPicked ? `<div class="picked-overlay">지명 완료</div>` : ''}
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+/* ============================================================================
+   7. TEAM EVALUATION & 20-TYPE SYNERGY ENGINE
+   ============================================================================ */
+function getDefenseMultiplier(attackAttr, defenderAttrs) {
+  let mult = 1;
+  defenderAttrs.forEach(defAttr => {
+    const chartRow = TYPE_CHART[attackAttr];
+    if (chartRow && chartRow[defAttr] !== undefined) {
+      mult *= chartRow[defAttr];
+    }
+  });
+  return mult;
+}
+
+function analyzeTeamTypeBalance(roster) {
+  const weakCount = {};
+  const resistCount = {};
+  ALL_ATTRIBUTES.forEach(a => { weakCount[a] = 0; resistCount[a] = 0; });
+
+  roster.forEach(member => {
+    ALL_ATTRIBUTES.forEach(atkAttr => {
+      const mult = getDefenseMultiplier(atkAttr, member.attrs);
+      if (mult >= 2) weakCount[atkAttr]++;
+      if (mult <= 0.5) resistCount[atkAttr]++;
+    });
+  });
+
+  const criticalWeaknesses = [];
+  const wellCovered = [];
+  ALL_ATTRIBUTES.forEach(attr => {
+    if (weakCount[attr] >= 2 && resistCount[attr] === 0) {
+      criticalWeaknesses.push(`${attr}(약점 ${weakCount[attr]}명/반감 0명)`);
+    } else if (weakCount[attr] > 0 && resistCount[attr] > 0) {
+      wellCovered.push(attr);
+    }
+  });
+
+  // Count offensive attribute diversity
+  const teamAttrs = new Set();
+  roster.forEach(m => m.attrs.forEach(a => teamAttrs.add(a)));
+
+  return {
+    uniqueAttrCount: teamAttrs.size,
+    teamAttrs: Array.from(teamAttrs),
+    criticalWeaknesses,
+    wellCovered
+  };
+}
+
+function finishDraft() {
+  draftState.active = false;
+  document.getElementById('draftView').classList.add('hidden');
+  document.getElementById('resultView').classList.remove('hidden');
+
+  const isRpg = appData.config.posMode === 'rpg';
+  document.getElementById('resultModeBadge').textContent = isRpg
+    ? 'RPG 직업 모드 (던전·레이드 파티 조합 평가)'
+    : '라인 모드 (5포지션 라인전·한타 운영 평가)';
+
+  const container = document.getElementById('evaluationContainer');
+  container.innerHTML = '';
+
+  draftState.teams.forEach(team => {
+    const fullRoster = [team.captain, ...team.members];
+
+    // 1. Tier Analysis
+    const tierCounts = { X: 0, S: 0, A: 0, B: 0, C: 0, D: 0 };
+    let tierSum = 0;
+    fullRoster.forEach(m => {
+      tierCounts[m.tier]++;
+      tierSum += TIER_SCORE[m.tier];
+    });
+    const avgTierScore = tierSum / fullRoster.length;
+
+    // 2. Stats & Strategy & 8th Stat Synergy
+    let totalStatSum = 0;
+    let totalStrategy = 0;
+    let totalEighth = 0;
+    const eighthNames = [];
+
+    fullRoster.forEach(m => {
+      totalStatSum += getStatTotal(m.stats);
+      totalStrategy += Number(m.stats.str) || 0;
+      totalEighth += Number(m.stats.s8Val) || 0;
+      const stObj = appData.eighthStats.find(x => x.id === m.stats.s8Type);
+      if (stObj) eighthNames.push(`${m.name}(${stObj.name} ${m.stats.s8Val})`);
+    });
+
+    const avgStat = Math.round(totalStatSum / fullRoster.length);
+    const avgStrategy = Math.round(totalStrategy / fullRoster.length);
+    const avgEighth = Math.round(totalEighth / fullRoster.length);
+
+    // 3. Position / Role Coverage
+    const posCounts = {};
+    fullRoster.forEach(m => { posCounts[m.position] = (posCounts[m.position] || 0) + 1; });
+    const coveredPosCount = appData.config.positions.filter(p => posCounts[p] > 0).length;
+    const posCoverageRatio = coveredPosCount / appData.config.positions.length;
+
+    // 4. 20-Attribute Analysis
+    const typeAnalysis = analyzeTeamTypeBalance(fullRoster);
+
+    // 5. Final 5.0 Star Rating Calculation
+    let rawScore = 1.5;
+    rawScore += (avgTierScore / 100) * 1.35;                        // Tier power (up to 1.35)
+    rawScore += Math.min(0.85, (avgStat / 1200) * 0.85);            // Stat pool (up to 0.85)
+    rawScore += Math.min(0.55, ((avgStrategy + avgEighth) / 320) * 0.55); // Strategy + 8th stat synergy (up to 0.55)
+    rawScore += posCoverageRatio * 0.65;                            // Position balance (up to 0.65)
+    rawScore += Math.min(0.35, (typeAnalysis.uniqueAttrCount / 10) * 0.35); // Type diversity
+    rawScore -= Math.min(0.45, typeAnalysis.criticalWeaknesses.length * 0.12); // Uncovered weakness penalty
+
+    const finalRating = Math.max(1.0, Math.min(5.0, rawScore)).toFixed(2);
+    const fullStars = '★'.repeat(Math.round(finalRating)) + '☆'.repeat(5 - Math.round(finalRating));
+
+    // Mode-specific tactical evaluation text
+    let modeSpecificTitle = '';
+    let modeSpecificText = '';
+    if (isRpg) {
+      modeSpecificTitle = '🛡️ RPG 레이드·던전 파티 조합 평가';
+      const hasTank = (posCounts['탱커'] || 0) + (posCounts['전사'] || 0) > 0;
+      const hasHeal = (posCounts['힐러'] || 0) + (posCounts['서포터'] || 0) > 0;
+      const hasDps = (posCounts['마법사'] || 0) + (posCounts['암살자'] || 0) + (posCounts['원거리딜러'] || 0) > 0;
+      modeSpecificText = `
+        총 ${appData.config.positions.length}개 직업군 중 <strong>${coveredPosCount}개 직업군</strong>을 확보했습니다.
+        ${hasTank ? '전열 탱킹 라인이 구축되어 보스의 광역/일격 패턴을 받아낼 수 있으며, ' : '⚠️ 전열 탱커/전사 비중이 낮아 보스 일격기에 취약할 수 있으며, '}
+        ${hasHeal ? '힐러·서포터의 유지력 지원이 안정적입니다. ' : '⚠️ 전문 힐러/서포터가 부족해 장기전 유지력 관리가 핵심 과제입니다. '}
+        ${hasDps ? '물리·마법 딜러진의 화력 투사 밸런스가 준수합니다.' : '딜러 포지션 보강이 아쉽습니다.'}
+      `;
+    } else {
+      modeSpecificTitle = '⚔️ 라인전 · 사이드 · 한타 운영 평가';
+      const missing = appData.config.positions.filter(p => !posCounts[p]);
+      modeSpecificText = `
+        전체 라인 포지션 충족률 <strong>${Math.round(posCoverageRatio * 100)}%</strong> (${missing.length === 0 ? '전 라인 완벽 구축' : '공백 라인: ' + missing.join(', ')}).
+        ${avgStrategy >= 170 ? '높은 평균 전략 스탯을 바탕으로 오브젝트 교전 설계와 사이드 스플릿 주도권이 매우 뛰어납니다.' : '정면 교전 피지컬 중심으로 스노우볼을 굴리는 공격적인 라인 운영이 적합합니다.'}
+      `;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'eval-card';
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="${team.captain.avatar}" style="width:52px; height:52px; aspect-ratio:1/1; border-radius:8px; object-fit:cover; border:2px solid #fbbf24;" />
+          <div>
+            <div style="font-size:0.75rem; color:#fbbf24; font-weight:700;">👑 ${team.captain.name} 팀</div>
+            <div style="font-weight:800; font-size:1.05rem;">로스터 ${fullRoster.length}인 종합 리포트</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="star-score">★ ${finalRating} <span style="font-size:0.8rem; color:var(--text-sub);">/ 5.0</span></div>
+          <div style="color:#fbbf24; font-size:0.85rem; letter-spacing:1px;">${fullStars}</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:4px;">
+        ${fullRoster.map(m => `
+          <div style="min-width:66px; text-align:center;">
+            <img src="${m.avatar}" class="avatar-sq border-tier-${m.tier}" style="width:58px; height:58px; margin:0 auto 3px;" />
+            <div style="font-size:0.72rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
+            <div style="font-size:0.65rem; color:var(--text-sub);">${m.position}·${m.tier}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="eval-section">
+        <h5>${modeSpecificTitle}</h5>
+        <p style="color:var(--text-sub);">${modeSpecificText}</p>
+      </div>
+
+      <div class="eval-section">
+        <h5>📊 1. 티어 분포 및 캐리력 분석</h5>
+        <p style="color:var(--text-sub);">
+          구성: <strong>X(${tierCounts.X}) · S(${tierCounts.S}) · A(${tierCounts.A}) · B(${tierCounts.B}) · C(${tierCounts.C}) · D(${tierCounts.D})</strong><br/>
+          ${tierCounts.X + tierCounts.S >= 3 ? '최상위 하이퍼 캐리 자원이 다수 포진해 후반 폭발력과 변수 창출력이 최상급입니다.' : '특정 에이스 의존도가 낮고 팀 전체가 고르게 역할을 분담하는 밸런스형 로스터입니다.'}
+        </p>
+      </div>
+
+      <div class="eval-section">
+        <h5>🔮 2. 20종 다중 속성 시너지 및 상성 보완</h5>
+        <p style="color:var(--text-sub);">
+          보유 속성(${typeAnalysis.uniqueAttrCount}종): ${typeAnalysis.teamAttrs.join(', ')}<br/>
+          상호 약점 보완 완료: <span style="color:#34d399;">${typeAnalysis.wellCovered.length > 0 ? typeAnalysis.wellCovered.slice(0, 8).join(', ') : '없음'}</span><br/>
+          취약 주의 속성: <span style="color:#fca5a5;">${typeAnalysis.criticalWeaknesses.length > 0 ? typeAnalysis.criticalWeaknesses.join(', ') : '치명적 공통 약점 없음 (완벽 방어)'}</span>
+        </p>
+      </div>
+
+      <div class="eval-section">
+        <h5>🧬 3. 8대 스탯 구간 & 전략·고유 스탯 시너지</h5>
+        <p style="color:var(--text-sub);">
+          팀 평균 개체값: <strong>${avgStat}</strong> (${getStatRankInfo(avgStat).label})<br/>
+          평균 전략 스탯: <strong>${avgStrategy}</strong> · 평균 8번째 스탯: <strong>${avgEighth}</strong><br/>
+          ${avgStrategy >= 165 ? '보스의 고스펙 피지컬을 전략적 기믹 파훼로 역전할 수 있는 지략가 집단입니다.' : '직관적인 스탯 체급과 고유 패시브 연계를 통해 정면 돌파에 강점을 보입니다.'}<br/>
+          <span style="font-size:0.75rem; color:#94a3b8;">핵심 스탯 보유: ${eighthNames.join(' / ')}</span>
+        </p>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ============================================================================
+   8. CHARACTER DETAIL / EDIT MODAL & 8TH STAT CUSTOMIZATION
+   ============================================================================ */
+function openCharacterModal(type, id, readOnlyDuringDraft = false) {
+  modalContext.type = type;
+  modalContext.id = id;
+
+  const posSelect = document.getElementById('mPosition');
+  posSelect.innerHTML = appData.config.positions.map(p => `<option value="${p}">${p}</option>`).join('');
+
+  const s8Select = document.getElementById('s8Type');
+  s8Select.innerHTML = appData.eighthStats.map(s => `<option value="${s.id}">${s.name} (${s.target})</option>`).join('');
+
+  let targetObj = null;
+  if (id) {
+    const list = type === 'captain' ? appData.captains : appData.players;
+    targetObj = list.find(x => x.id === id);
+  }
+
+  if (targetObj) {
+    document.getElementById('charModalTitle').textContent = `${type === 'captain' ? '👑 감독' : '⚔️ 참가자'} 상세 프로필 — ${targetObj.name}`;
+    document.getElementById('mName').value = targetObj.name;
+    document.getElementById('mPosition').value = appData.config.positions.includes(targetObj.position) ? targetObj.position : appData.config.positions[0];
+    document.getElementById('mTier').value = targetObj.tier;
+    document.getElementById('mRace').value = targetObj.race;
+    modalContext.selectedAttrs = [...targetObj.attrs];
+    modalContext.avatarDataUrl = targetObj.avatar;
+
+    document.getElementById('sHP').value = targetObj.stats.hp;
+    document.getElementById('sATK').value = targetObj.stats.atk;
+    document.getElementById('sDEF').value = targetObj.stats.def;
+    document.getElementById('sSPA').value = targetObj.stats.spa;
+    document.getElementById('sSPD').value = targetObj.stats.spd;
+    document.getElementById('sSPE').value = targetObj.stats.spe;
+    document.getElementById('sSTR').value = targetObj.stats.str;
+    document.getElementById('s8Type').value = targetObj.stats.s8Type;
+    document.getElementById('s8Val').value = targetObj.stats.s8Val;
+
+    document.getElementById('mCombatRole').value = targetObj.combatRole || '';
+    document.getElementById('mSignatureSkill').value = targetObj.signatureSkill || '';
+    document.getElementById('mTrait').value = targetObj.trait || '';
+    document.getElementById('mHiddenTrait').value = targetObj.hiddenTrait || '';
+    document.getElementById('mAwakening').value = targetObj.awakening || '';
+    document.getElementById('mDeleteBtn').classList.toggle('hidden', readOnlyDuringDraft);
+  } else {
+    document.getElementById('charModalTitle').textContent = `새 ${type === 'captain' ? '감독' : '참가자'} 등록`;
+    document.getElementById('mName').value = '신규 캐릭터';
+    document.getElementById('mPosition').value = appData.config.positions[0];
+    document.getElementById('mTier').value = 'B';
+    document.getElementById('mRace').value = '인간';
+    modalContext.selectedAttrs = ['보통'];
+    modalContext.avatarDataUrl = makeSvgAvatar('신규', '#2563eb', '#0f172a', 'NEW');
+
+    document.getElementById('sHP').value = 90;
+    document.getElementById('sATK').value = 90;
+    document.getElementById('sDEF').value = 80;
+    document.getElementById('sSPA').value = 80;
+    document.getElementById('sSPD').value = 80;
+    document.getElementById('sSPE').value = 85;
+    document.getElementById('sSTR').value = 90;
+    document.getElementById('s8Type').value = appData.eighthStats[0].id;
+    document.getElementById('s8Val').value = 65;
+
+    document.getElementById('mCombatRole').value = '균형형 전위';
+    document.getElementById('mSignatureSkill').value = '전용 비기';
+    document.getElementById('mTrait').value = '';
+    document.getElementById('mHiddenTrait').value = '';
+    document.getElementById('mAwakening').value = '';
+    document.getElementById('mDeleteBtn').classList.add('hidden');
+  }
+
+  document.getElementById('mAvatarPreview').src = modalContext.avatarDataUrl;
+  renderAttributeSelector();
+  updateEighthStatDesc();
+  updateStatTotalUI();
+
+  document.getElementById('charModal').classList.add('open');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('open');
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    modalContext.avatarDataUrl = e.target.result;
+    document.getElementById('mAvatarPreview').src = modalContext.avatarDataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderAttributeSelector() {
+  const container = document.getElementById('mAttrSelector');
+  container.innerHTML = '';
+  ALL_ATTRIBUTES.forEach(attr => {
+    const idx = modalContext.selectedAttrs.indexOf(attr);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'attr-btn' + (idx !== -1 ? ' selected' : '');
+    btn.textContent = idx !== -1 ? `${idx + 1}. ${attr}` : attr;
+    btn.onclick = () => toggleAttributeSelection(attr);
+    container.appendChild(btn);
+  });
+  document.getElementById('selectedAttrOrder').textContent =
+    modalContext.selectedAttrs.map((a, i) => `${i + 1}순위:${a}`).join(' / ');
+}
+
+function toggleAttributeSelection(attr) {
+  const idx = modalContext.selectedAttrs.indexOf(attr);
+  if (idx !== -1) {
+    if (modalContext.selectedAttrs.length === 1) {
+      alert('속성은 최소 1개 이상 선택해야 합니다.');
+      return;
+    }
+    modalContext.selectedAttrs.splice(idx, 1);
+  } else {
+    if (modalContext.selectedAttrs.length >= 3) {
+      alert('속성은 최대 3개까지 선택할 수 있습니다.');
+      return;
+    }
+    modalContext.selectedAttrs.push(attr);
+  }
+  renderAttributeSelector();
+}
+
+function updateEighthStatDesc() {
+  const id = document.getElementById('s8Type').value;
+  const found = appData.eighthStats.find(s => s.id === id);
+  document.getElementById('s8DescBox').textContent = found ? `[${found.target}] ${found.desc}` : '';
+}
+
+function updateStatTotalUI() {
+  const s8Input = document.getElementById('s8Val');
+  if (Number(s8Input.value) > 100) s8Input.value = 100;
+  if (Number(s8Input.value) < 0) s8Input.value = 0;
+
+  const stats = {
+    hp: Number(document.getElementById('sHP').value) || 0,
+    atk: Number(document.getElementById('sATK').value) || 0,
+    def: Number(document.getElementById('sDEF').value) || 0,
+    spa: Number(document.getElementById('sSPA').value) || 0,
+    spd: Number(document.getElementById('sSPD').value) || 0,
+    spe: Number(document.getElementById('sSPE').value) || 0,
+    str: Number(document.getElementById('sSTR').value) || 0,
+    s8Val: Number(s8Input.value) || 0
+  };
+
+  const total = getStatTotal(stats);
+  const rank = getStatRankInfo(total);
+  const bar = document.getElementById('statTotalBar');
+  const warn = document.getElementById('statWarningMsg');
+  const saveBtn = document.getElementById('mSaveBtn');
+
+  document.getElementById('statTotalNum').textContent = total;
+  document.getElementById('statRankBadge').innerHTML =
+    `<span class="rank-tag" style="background:${rank.bg}; color:${rank.color};">${rank.label}</span>`;
+
+  if (total > 2333) {
+    bar.classList.add('over-limit');
+    warn.classList.remove('hidden');
+    saveBtn.disabled = true;
+  } else {
+    bar.classList.remove('over-limit');
+    warn.classList.add('hidden');
+    saveBtn.disabled = false;
+  }
+}
+
+function saveCharacterModal() {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) { alert('이름을 입력해 주세요.'); return; }
+
+  const stats = {
+    hp: Number(document.getElementById('sHP').value) || 0,
+    atk: Number(document.getElementById('sATK').value) || 0,
+    def: Number(document.getElementById('sDEF').value) || 0,
+    spa: Number(document.getElementById('sSPA').value) || 0,
+    spd: Number(document.getElementById('sSPD').value) || 0,
+    spe: Number(document.getElementById('sSPE').value) || 0,
+    str: Number(document.getElementById('sSTR').value) || 0,
+    s8Type: document.getElementById('s8Type').value,
+    s8Val: Math.min(100, Math.max(0, Number(document.getElementById('s8Val').value) || 0))
+  };
+
+  if (getStatTotal(stats) > 2333) {
+    alert('최종 개체값 총합이 2333을 초과하여 저장할 수 없습니다.');
+    return;
+  }
+
+  const record = {
+    id: modalContext.id || (modalContext.type === 'captain' ? 'cap_' : 'plr_') + Date.now(),
+    name,
+    position: document.getElementById('mPosition').value,
+    tier: document.getElementById('mTier').value,
+    race: document.getElementById('mRace').value.trim() || '불명',
+    attrs: [...modalContext.selectedAttrs],
+    stats,
+    combatRole: document.getElementById('mCombatRole').value.trim(),
+    signatureSkill: document.getElementById('mSignatureSkill').value.trim(),
+    trait: document.getElementById('mTrait').value.trim(),
+    hiddenTrait: document.getElementById('mHiddenTrait').value.trim(),
+    awakening: document.getElementById('mAwakening').value.trim(),
+    avatar: modalContext.avatarDataUrl
+  };
+
+  const list = modalContext.type === 'captain' ? appData.captains : appData.players;
+  if (modalContext.id) {
+    const idx = list.findIndex(x => x.id === modalContext.id);
+    if (idx !== -1) list[idx] = record;
+  } else {
+    list.push(record);
+  }
+
+  saveToStorage();
+  closeModal('charModal');
+
+  if (draftState.active) {
+    renderDraftView();
+  } else {
+    renderSetupView();
+  }
+}
+
+function deleteCurrentCharacter() {
+  if (!modalContext.id) return;
+  if (!confirm('정말 이 캐릭터를 삭제할까요?')) return;
+  if (modalContext.type === 'captain') {
+    appData.captains = appData.captains.filter(x => x.id !== modalContext.id);
+  } else {
+    appData.players = appData.players.filter(x => x.id !== modalContext.id);
+  }
+  saveToStorage();
+  closeModal('charModal');
+  renderSetupView();
+}
+
+/* Custom 8th Stat Manager */
+function openCustomStatModal() {
+  renderEighthStatList();
+  document.getElementById('customStatModal').classList.add('open');
+}
+
+function renderEighthStatList() {
+  const container = document.getElementById('eighthStatList');
+  container.innerHTML = '';
+  appData.eighthStats.forEach((st, idx) => {
+    const isDefault = idx < 6;
+    const item = document.createElement('div');
+    item.style.cssText = 'background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;';
+    item.innerHTML = `
+      <div>
+        <div style="font-weight:700; font-size:0.88rem; color:var(--accent);">${st.name} <span style="font-size:0.75rem; color:#fbbf24;">(${st.target})</span></div>
+        <div style="font-size:0.78rem; color:var(--text-sub);">${st.desc}</div>
+      </div>
+      ${!isDefault ? `<button class="btn btn-sm btn-danger" onclick="deleteCustomEighthStat('${st.id}')">삭제</button>` : '<span style="font-size:0.72rem; color:var(--text-sub);">기본</span>'}
+    `;
+    container.appendChild(item);
+  });
+}
+
+function addCustomEighthStat() {
+  const name = document.getElementById('newStatName').value.trim();
+  const target = document.getElementById('newStatTarget').value.trim() || '전체';
+  const desc = document.getElementById('newStatDesc').value.trim();
+  if (!name || !desc) {
+    alert('스탯 명칭과 효과/패널티 설명을 모두 입력해 주세요.');
+    return;
+  }
+  appData.eighthStats.push({
+    id: 'custom_' + Date.now(),
+    name,
+    target,
+    desc
+  });
+  document.getElementById('newStatName').value = '';
+  document.getElementById('newStatTarget').value = '';
+  document.getElementById('newStatDesc').value = '';
+  saveToStorage();
+  renderEighthStatList();
+}
+
+function deleteCustomEighthStat(id) {
+  appData.eighthStats = appData.eighthStats.filter(s => s.id !== id);
+  saveToStorage();
+  renderEighthStatList();
+}
+
+/* ============================================================================
+   9. JSON EXPORT / IMPORT
+   ============================================================================ */
+function exportJSON() {
+  const dataStr = JSON.stringify(appData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `nexus-snake-draft-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.config || !Array.isArray(parsed.captains) || !Array.isArray(parsed.players)) {
+        throw new Error('유효하지 않은 드래프트 JSON 형식입니다.');
+      }
+      appData = parsed;
+      saveToStorage();
+      abortDraftToSetup();
+      alert('JSON 데이터를 성공적으로 불러왔습니다!');
+    } catch (err) {
+      alert('JSON 불러오기 실패: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ============================================================================
+   10. BOOTSTRAP
+   ============================================================================ */
+renderSetupView();
+</script>
+</body>
+</html>
